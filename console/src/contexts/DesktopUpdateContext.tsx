@@ -20,6 +20,9 @@ import {
 } from "../tauri/desktopUpdate";
 import { isDesktopApp } from "../tauri/backendRuntime";
 
+const desktopUpdatesEnabled =
+  import.meta.env.VITE_DESKTOP_UPDATES_ENABLED !== "false";
+
 export type UpdatePhase =
   | "idle"
   | "checking"
@@ -72,7 +75,7 @@ export function DesktopUpdateProvider({ children }: { children: ReactNode }) {
 
   // Probe on mount: check remote update + check cached update on disk.
   useEffect(() => {
-    if (!isDesktopApp()) return;
+    if (!desktopUpdatesEnabled || !isDesktopApp()) return;
     let cancelled = false;
 
     // Check if there's a cached (already downloaded) update on disk.
@@ -132,7 +135,7 @@ export function DesktopUpdateProvider({ children }: { children: ReactNode }) {
 
   // Subscribe to Rust-side update:* events.
   useEffect(() => {
-    if (!isDesktopApp()) return;
+    if (!desktopUpdatesEnabled || !isDesktopApp()) return;
     let unlisten: (() => void) | null = null;
     let cancelled = false;
     onUpdateEvent({

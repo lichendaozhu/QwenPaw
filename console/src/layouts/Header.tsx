@@ -39,6 +39,9 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useDesktopUpdate } from "../contexts/DesktopUpdateContext";
 import { isDesktopApp } from "../tauri/backendRuntime";
+
+const desktopUpdatesEnabled =
+  import.meta.env.VITE_DESKTOP_UPDATES_ENABLED !== "false";
 import {
   CopyOutlined,
   CheckOutlined,
@@ -175,7 +178,7 @@ export default function Header() {
   }, [onDesktop]);
 
   const hasUpdate = onDesktop
-    ? desktop.hasUpdate
+    ? desktopUpdatesEnabled && desktop.hasUpdate
     : !!version &&
       !!latestVersion &&
       compareVersions(latestVersion, version) > 0;
