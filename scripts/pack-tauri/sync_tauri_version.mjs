@@ -85,20 +85,33 @@ function shouldCreateUpdaterArtifacts() {
   return Boolean(process.env.TAURI_SIGNING_PRIVATE_KEY?.trim());
 }
 
+function readBundleTargets() {
+  const raw = process.env.QWENPAW_TAURI_BUNDLE_TARGETS?.trim();
+  if (!raw) return undefined;
+
+  const targets = raw
+    .split(/[\n,]/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  if (!targets.length) {
+    throw new Error("QWENPAW_TAURI_BUNDLE_TARGETS cannot be empty");
+  }
+  return targets;
+}
+
 function writeTauriVersionConfig(file, version) {
   const baseUpdater = readBaseUpdaterConfig();
   const pubkey = process.env.TAURI_UPDATER_PUBKEY?.trim() || baseUpdater.pubkey;
   const endpoints = readUpdaterEndpoints(baseUpdater);
   const createUpdaterArtifacts = shouldCreateUpdaterArtifacts();
+  const bundleTargets = readBundleTargets();
+  const bundle = {
+    ...(bundleTargets ? { targets: bundleTargets } : {}),
+    ...(createUpdaterArtifacts ? { createUpdaterArtifacts: true } : {}),
+  };
   const config = {
     version,
-    ...(createUpdaterArtifacts
-      ? {
-          bundle: {
-            createUpdaterArtifacts: true,
-          },
-        }
-      : {}),
+    ...(Object.keys(bundle).length ? { bundle } : {}),
     plugins: {
       updater: {
         pubkey,
