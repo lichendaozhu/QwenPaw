@@ -39,11 +39,6 @@ if [[ "$(uname -s)" != "Linux" ]]; then
     exit 1
 fi
 
-if [[ ! -x "${REPO_ROOT}/.venv/bin/python" ]]; then
-    echo "ERROR: .venv/bin/python is missing; create a Python 3.11 venv first" >&2
-    exit 1
-fi
-
 echo "== Building Console Static Assets =="
 pushd console >/dev/null
 npm ci
