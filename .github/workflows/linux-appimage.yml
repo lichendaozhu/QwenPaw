@@ -11,9 +11,9 @@ permissions:
 
 jobs:
   build-linux-appimage:
-    # Keep the build on the oldest supported Ubuntu baseline.  The AppImage
-    # linuxdeploy/GTK path is currently unreliable on ubuntu-latest (24.04).
-    runs-on: ubuntu-22.04
+    # Build on the glibc 2.31 baseline so the AppImage can run on the user's
+    # Ubuntu 20.04-era system. AppImages do not bundle glibc itself.
+    runs-on: ubuntu-20.04
     timeout-minutes: 90
     steps:
       - name: Checkout
@@ -31,10 +31,10 @@ jobs:
             libappindicator3-dev \
             libglib2.0-dev \
             libgtk-3-dev \
-            libtbb12 \
+            libtbb2 \
             libtbbmalloc2 \
             librsvg2-dev \
-            libwebkit2gtk-4.1-dev \
+            libwebkit2gtk-4.0-dev \
             patchelf \
             zsync
 
