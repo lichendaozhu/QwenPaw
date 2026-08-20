@@ -131,7 +131,7 @@ mkdir -p "${TOOL_DIR}"
 
 if [[ ! -x "${LINUXDEPLOY}" ]]; then
     curl --fail --location --retry 3 \
-        "https://github.com/tauri-apps/binary-releases/releases/download/linuxdeploy/linuxdeploy-x86_64.AppImage" \
+        "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage" \
         --output "${LINUXDEPLOY}"
     chmod +x "${LINUXDEPLOY}"
 fi
