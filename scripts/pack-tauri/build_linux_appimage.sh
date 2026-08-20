@@ -142,7 +142,8 @@ fi
 echo "== Bundling Linux shared-library dependencies =="
 APPIMAGE_EXTRACT_AND_RUN=1 \
   "${LINUXDEPLOY}" --appimage-extract-and-run --verbosity 3 --appdir "${APPDIR}" \
-  --exclude-library="libcuda.so.1"
+  --exclude-library="libcuda.so.1" \
+  --exclude-library="libtriton.so"
 
 if [[ ! -x "${APPIMAGETOOL}" ]]; then
     curl --fail --location --retry 3 \
