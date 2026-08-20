@@ -100,6 +100,23 @@ if [[ -z "${ICON_FILE}" ]]; then
     exit 1
 fi
 cp "${ICON_FILE}" "${APPDIR}/.DirIcon"
+ICON_NAME="$(sed -n 's/^Icon=//p' "${DESKTOP_FILE}" | head -n 1)"
+if [[ -z "${ICON_NAME}" ]]; then
+    echo "ERROR: desktop entry did not declare an icon name" >&2
+    exit 1
+fi
+case "${ICON_FILE}" in
+    *.png)
+        cp "${ICON_FILE}" "${APPDIR}/${ICON_NAME}.png"
+        ;;
+    *.svg)
+        cp "${ICON_FILE}" "${APPDIR}/${ICON_NAME}.svg"
+        ;;
+    *)
+        echo "ERROR: unsupported application icon format: ${ICON_FILE}" >&2
+        exit 1
+        ;;
+esac
 
 if ! command -v curl >/dev/null 2>&1; then
     echo "ERROR: curl is required to download appimagetool" >&2
