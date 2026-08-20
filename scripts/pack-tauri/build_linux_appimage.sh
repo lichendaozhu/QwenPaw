@@ -3,8 +3,9 @@
 #
 # Tauri's linuxdeploy GTK plugin is unreliable on GitHub-hosted runners. Build
 # the Tauri Debian bundle first, extract its already-correct AppDir layout,
-# then use appimagetool directly. This keeps Tauri resource paths intact while
-# avoiding the failing linuxdeploy GTK/AppImage plugin chain.
+# use linuxdeploy only to collect shared-library dependencies, then use
+# appimagetool directly. This keeps WebKitGTK inside the AppImage without the
+# failing GTK plugin chain.
 
 set -euo pipefail
 
@@ -124,8 +125,24 @@ if ! command -v curl >/dev/null 2>&1; then
 fi
 
 TOOL_DIR="${REPO_ROOT}/.cache/packaging"
+LINUXDEPLOY="${TOOL_DIR}/linuxdeploy-x86_64.AppImage"
 APPIMAGETOOL="${TOOL_DIR}/appimagetool-x86_64.AppImage"
 mkdir -p "${TOOL_DIR}"
+
+if [[ ! -x "${LINUXDEPLOY}" ]]; then
+    curl --fail --location --retry 3 \
+        "https://github.com/tauri-apps/binary-releases/releases/download/linuxdeploy/linuxdeploy-x86_64.AppImage" \
+        --output "${LINUXDEPLOY}"
+    chmod +x "${LINUXDEPLOY}"
+fi
+
+# Do not use --plugin gtk here. That plugin is the failing part of Tauri's
+# default AppImage path. linuxdeploy's core dependency follower is enough to
+# collect libwebkit2gtk, GTK, and their ELF dependencies into AppDir.
+echo "== Bundling Linux shared-library dependencies =="
+APPIMAGE_EXTRACT_AND_RUN=1 \
+  "${LINUXDEPLOY}" --appimage-extract-and-run --verbosity 3 --appdir "${APPDIR}"
+
 if [[ ! -x "${APPIMAGETOOL}" ]]; then
     curl --fail --location --retry 3 \
         "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" \
