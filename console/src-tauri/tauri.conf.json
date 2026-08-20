@@ -37,7 +37,7 @@
     "active": true,
     "targets": ["app", "nsis"],
     "icon": [
-      "../../scripts/pack/assets/icon.png",
+      "icons/icon.png",
       "../../scripts/pack/assets/icon.icns",
       "../../scripts/pack/assets/icon.ico"
     ],
