@@ -10,6 +10,9 @@ set -euo pipefail
 # linuxdeploy as an AppImage; force AppImage tools to self-extract instead of
 # trying to mount through FUSE.
 export APPIMAGE_EXTRACT_AND_RUN=1
+# Make the exact linuxdeploy command and its stderr visible in CI.  Tauri's
+# default error only reports "failed to run linuxdeploy".
+export RUST_LOG="${RUST_LOG:-tauri_bundler=trace,tauri_cli=debug}"
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO_ROOT"
