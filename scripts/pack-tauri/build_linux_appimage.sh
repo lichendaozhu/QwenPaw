@@ -141,7 +141,8 @@ fi
 # collect libwebkit2gtk, GTK, and their ELF dependencies into AppDir.
 echo "== Bundling Linux shared-library dependencies =="
 APPIMAGE_EXTRACT_AND_RUN=1 \
-  "${LINUXDEPLOY}" --appimage-extract-and-run --verbosity 3 --appdir "${APPDIR}"
+  "${LINUXDEPLOY}" --appimage-extract-and-run --verbosity 3 --appdir "${APPDIR}" \
+  --exclude-library="libcuda.so.1"
 
 if [[ ! -x "${APPIMAGETOOL}" ]]; then
     curl --fail --location --retry 3 \
