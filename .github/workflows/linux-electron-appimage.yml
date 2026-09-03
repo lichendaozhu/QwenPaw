@@ -9,15 +9,17 @@ on:
 jobs:
   appimage:
     runs-on: ubuntu-22.04
-    container: node:20-bullseye
+    container: python:3.11-bullseye
     steps:
       - name: Install build tools
         run: |
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            ca-certificates curl git python3 python3-venv python3-dev build-essential \
+            ca-certificates curl git python3-venv python3-dev build-essential \
             binutils file fuse libfuse2 libglib2.0-0 libgtk-3-0 libnss3 libxss1 \
             libasound2 libgbm1 libxshmfence1 xauth xvfb
+          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends nodejs
       - uses: actions/checkout@v4
         with:
           ref: codex/linux-appimage-v2.2.0
