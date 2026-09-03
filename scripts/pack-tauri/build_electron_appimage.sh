@@ -13,4 +13,9 @@ chmod +x "$DIST/electron-backend/qwenpaw-backend"
 rm -rf electron/console-dist
 cp -a console/dist electron/console-dist
 npm --prefix electron install --no-audit --no-fund
-npm --prefix electron run dist:linux
+ELECTRON_ARCH="${ELECTRON_ARCH:-x64}"
+case "$ELECTRON_ARCH" in
+  x64) npm --prefix electron run dist:linux:x64 ;;
+  arm64) npm --prefix electron run dist:linux:arm64 ;;
+  *) echo "Unsupported ELECTRON_ARCH: $ELECTRON_ARCH" >&2; exit 2 ;;
+esac

@@ -1,0 +1,48 @@
+name: Linux Electron ARM64 AppImage (glibc 2.31)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/linux-appimage-v2.2.0
+
+jobs:
+  appimage:
+    runs-on: ubuntu-22.04-arm
+    container: python:3.11-bullseye
+    steps:
+      - name: Install build tools
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            ca-certificates curl git python3-venv python3-dev build-essential \
+            binutils file fuse libfuse2 libglib2.0-0 libgtk-3-0 libnss3 libxss1 \
+            libasound2 libgbm1 libxshmfence1 xauth xvfb
+          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends nodejs
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/linux-appimage-v2.2.0
+      - name: Build Electron ARM64 AppImage
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          ELECTRON_ARCH: arm64
+          npm_config_fund: "false"
+          npm_config_audit: "false"
+        run: bash scripts/pack-tauri/build_electron_appimage.sh
+      - name: Validate ARM64 artifact and runtime ABI
+        run: |
+          APPIMAGE="$(find electron/dist -maxdepth 1 -name '*.AppImage' -type f | head -1)"
+          test -n "$APPIMAGE"
+          file "$APPIMAGE" | grep -Eiq 'arm aarch64|aarch64|arm64'
+          chmod +x "$APPIMAGE"
+          "$APPIMAGE" --appimage-extract >/dev/null
+          file squashfs-root/qwenpaw | grep -Eiq 'arm aarch64|aarch64|arm64'
+          readelf --version-info squashfs-root/qwenpaw | grep -Eo 'GLIBC_[0-9.]+' | sort -Vu | tail -5 || true
+          timeout 45s xvfb-run -a squashfs-root/qwenpaw --no-sandbox --disable-gpu --disable-dev-shm-usage >/tmp/qwenpaw-electron-arm64.log 2>&1 || test $? -eq 124
+      - name: Upload ARM64 AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: QwenPaw-Electron-v2.2.0-Linux-arm64-AppImage
+          path: electron/dist/*.AppImage
+          if-no-files-found: error

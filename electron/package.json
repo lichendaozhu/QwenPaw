@@ -7,7 +7,8 @@
   "main": "src/main.cjs",
   "scripts": {
     "start": "electron .",
-    "dist:linux": "electron-builder --linux AppImage --x64"
+    "dist:linux:x64": "electron-builder --linux AppImage --x64",
+    "dist:linux:arm64": "electron-builder --linux AppImage --arm64"
   },
   "devDependencies": {
     "electron": "30.5.1",
@@ -39,7 +40,7 @@
       "icon": "../scripts/pack/assets/icon.svg"
     },
     "appImage": {
-      "artifactName": "QwenPaw-${version}-Linux-x86_64.AppImage"
+      "artifactName": "QwenPaw-${version}-Linux-${arch}.AppImage"
     }
   }
 }

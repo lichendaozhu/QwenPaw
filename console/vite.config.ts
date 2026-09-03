@@ -50,6 +50,22 @@ export default defineConfig(({ command, mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
+        ...(mode === "electron"
+          ? {
+              "@tauri-apps/api/core": path.resolve(
+                __dirname,
+                "src/desktop/runtime.ts",
+              ),
+              "@tauri-apps/api/event": path.resolve(
+                __dirname,
+                "src/desktop/runtime.ts",
+              ),
+              "@tauri-apps/plugin-dialog": path.resolve(
+                __dirname,
+                "src/desktop/runtime.ts",
+              ),
+            }
+          : {}),
       },
     },
     server: {
