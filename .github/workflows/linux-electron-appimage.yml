@@ -2,6 +2,9 @@ name: Linux Electron AppImage (glibc 2.31)
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - codex/linux-appimage-v2.2.0
 
 jobs:
   appimage:
