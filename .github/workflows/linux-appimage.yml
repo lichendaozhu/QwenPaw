@@ -11,9 +11,10 @@ permissions:
 
 jobs:
   build-linux-appimage:
-    # Build on the glibc 2.31 baseline so the AppImage can run on the user's
-    # Ubuntu 20.04-era system. AppImages do not bundle glibc itself.
-    runs-on: ubuntu-20.04
+    # Use an available hosted runner, but compile inside Ubuntu 20.04 so the
+    # AppImage stays compatible with the user's glibc 2.31 system.
+    runs-on: ubuntu-22.04
+    container: ubuntu:20.04
     timeout-minutes: 90
     steps:
       - name: Checkout
@@ -21,12 +22,15 @@ jobs:
 
       - name: Install Linux desktop build dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y \
             build-essential \
+            ca-certificates \
+            curl \
             desktop-file-utils \
             file \
             fuse \
+            git \
             libfuse2 \
             libappindicator3-dev \
             libglib2.0-dev \
@@ -36,6 +40,7 @@ jobs:
             librsvg2-dev \
             libwebkit2gtk-4.0-dev \
             patchelf \
+            pkg-config \
             zsync
 
       - name: Set up Python
