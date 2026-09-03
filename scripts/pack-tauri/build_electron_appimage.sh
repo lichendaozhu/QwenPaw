@@ -5,6 +5,7 @@ cd "$REPO_ROOT"
 DIST="${DIST:-dist}"
 rm -rf "$DIST/electron-backend"
 mkdir -p "$DIST/electron-backend"
+"${NPM:-npm}" --prefix console ci --no-audit --no-fund
 VITE_DESKTOP_UPDATES_ENABLED=false npm --prefix console run build:electron
 bash scripts/pack-tauri/build_pyinstaller.sh
 cp -a console/src-tauri/binaries/qwenpaw-backend/. "$DIST/electron-backend/"
