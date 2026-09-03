@@ -14,7 +14,7 @@ jobs:
     # Use an available hosted runner, but compile inside Ubuntu 20.04 so the
     # AppImage stays compatible with the user's glibc 2.31 system.
     runs-on: ubuntu-22.04
-    container: ubuntu:20.04
+    container: python:3.11-bullseye
     timeout-minutes: 90
     steps:
       - name: Checkout
@@ -32,7 +32,7 @@ jobs:
             fuse \
             git \
             libfuse2 \
-            libappindicator3-dev \
+            libayatana-appindicator3-dev \
             libglib2.0-dev \
             libgtk-3-dev \
             libtbb2 \
@@ -41,11 +41,6 @@ jobs:
             patchelf \
             pkg-config \
             zsync
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
 
       - name: Install packaging helper dependencies
         run: python -m pip install packaging
