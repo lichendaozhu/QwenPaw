@@ -1,0 +1,45 @@
+{
+  "name": "qwenpaw-electron",
+  "version": "2.2.0",
+  "private": true,
+  "author": "AgentScope",
+  "description": "QwenPaw desktop application for Linux",
+  "main": "src/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dist:linux": "electron-builder --linux AppImage --x64"
+  },
+  "devDependencies": {
+    "electron": "30.5.1",
+    "electron-builder": "24.13.3"
+  },
+  "build": {
+    "appId": "io.agentscope.qwenpaw.desktop",
+    "productName": "QwenPaw",
+    "asar": true,
+    "compression": "maximum",
+    "files": [
+      "src/**/*",
+      "console-dist/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../dist/electron-backend",
+        "to": "backend"
+      },
+      {
+        "from": "../scripts/pack/assets/icon.svg",
+        "to": "icon.svg"
+      }
+    ],
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Utility",
+      "executableName": "qwenpaw",
+      "icon": "../scripts/pack/assets/icon.svg"
+    },
+    "appImage": {
+      "artifactName": "QwenPaw-${version}-Linux-x86_64.AppImage"
+    }
+  }
+}
