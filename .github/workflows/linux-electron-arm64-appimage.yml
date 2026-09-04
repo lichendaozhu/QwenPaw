@@ -27,6 +27,7 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
           ELECTRON_ARCH: arm64
+          NODE_OPTIONS: "--max-old-space-size=8192"
           npm_config_fund: "false"
           npm_config_audit: "false"
         run: bash scripts/pack-tauri/build_electron_appimage.sh
