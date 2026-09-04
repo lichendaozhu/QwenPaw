@@ -30,6 +30,9 @@ export default defineConfig(({ command, mode }) => {
   const apiBaseUrl = env.VITE_API_BASE_URL ?? "";
 
   return {
+    // Electron loads the bundle through file://, so public assets must be
+    // relative paths. Web/Tauri builds keep the normal root base.
+    base: mode === "electron" ? "./" : "/",
     define: {
       VITE_API_BASE_URL: JSON.stringify(apiBaseUrl),
       TOKEN: JSON.stringify(env.TOKEN || ""),
