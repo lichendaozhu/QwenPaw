@@ -31,6 +31,10 @@
       {
         "from": "../scripts/pack/assets/icon.svg",
         "to": "icon.svg"
+      },
+      {
+        "from": "../scripts/pack/assets/icon.png",
+        "to": "icon.png"
       }
     ],
     "linux": {

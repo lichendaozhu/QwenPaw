@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain, shell, Menu, Tray } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, shell, Menu, Tray, nativeImage } = require("electron");
 const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
@@ -112,6 +112,22 @@ function createWindow() {
   });
 }
 
+function createTray() {
+  const iconPath = path.join(process.resourcesPath, "icon.png");
+  if (!fs.existsSync(iconPath)) {
+    console.warn(`Tray icon not found: ${iconPath}`);
+    return;
+  }
+  const icon = nativeImage.createFromPath(iconPath);
+  if (icon.isEmpty()) {
+    console.warn(`Tray icon could not be decoded: ${iconPath}`);
+    return;
+  }
+  tray = new Tray(icon);
+  tray.setContextMenu(Menu.buildFromTemplate([{ label: "Show Window", click: () => mainWindow.show() }, { label: "Quit", click: () => { app.isQuitting = true; void stopBackend().finally(() => app.quit()); } }]));
+  tray.on("click", () => mainWindow.show());
+}
+
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
   ipcMain.handle("qwenpaw:invoke", (_event, command, args) => invokeCommand(command, args));
@@ -119,9 +135,7 @@ app.whenReady().then(() => {
   ipcMain.handle("qwenpaw:dialog-open", (_event, options = {}) => dialog.showOpenDialog(mainWindow, options).then((r) => r.canceled ? null : (options.properties || []).includes("multiSelections") ? r.filePaths : r.filePaths[0]));
   startBackend();
   createWindow();
-  tray = new Tray(path.join(process.resourcesPath, "icon.svg"));
-  tray.setContextMenu(Menu.buildFromTemplate([{ label: "Show Window", click: () => mainWindow.show() }, { label: "Quit", click: () => { app.isQuitting = true; void stopBackend().finally(() => app.quit()); } }]));
-  tray.on("click", () => mainWindow.show());
+  createTray();
 });
 
 app.on("before-quit", (event) => {
