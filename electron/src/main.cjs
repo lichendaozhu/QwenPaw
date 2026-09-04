@@ -3,6 +3,11 @@ const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
+// Kylin installations commonly have no matching VA-API driver. Use software
+// rendering by default so the missing libva driver cannot affect startup.
+app.commandLine.appendSwitch("disable-gpu");
+app.commandLine.appendSwitch("disable-gpu-compositing");
+
 let mainWindow;
 let tray;
 let backend;
