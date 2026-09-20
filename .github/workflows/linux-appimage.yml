@@ -45,8 +45,11 @@ jobs:
             python3-dev \
             python3-pip \
             python3-venv \
+            squashfs-tools \
             xvfb \
             zsync
+          apt-get clean
+          find /var/lib/apt/lists -mindepth 1 -delete
 
       - name: Install packaging helper dependencies
         run: python3 -m pip install packaging
@@ -73,18 +76,57 @@ jobs:
 
       - name: Validate AppImage and bundled glibc runtime
         run: |
+          set -euo pipefail
           APPIMAGE="$(find dist -maxdepth 1 -type f -name 'QwenPaw-Tauri-*-Linux-x86_64.AppImage' -print -quit)"
+          APPDIR="console/src-tauri/target/release/bundle/appimage/QwenPaw.AppDir"
           test -n "$APPIMAGE"
+          test -d "$APPDIR"
           file "$APPIMAGE" | grep -Eiq 'x86-64|x86_64'
           chmod +x "$APPIMAGE"
-          "$APPIMAGE" --appimage-extract >/dev/null
-          test -x squashfs-root/usr/lib/ld-linux-x86-64.so.2
-          test -x squashfs-root/usr/bin/qwenpaw-desktop
-          readelf --version-info squashfs-root/usr/bin/qwenpaw-desktop | grep -Eo 'GLIBC_[0-9.]+' | sort -Vu | tail -5 || true
-          timeout 45s xvfb-run -a squashfs-root/AppRun >/tmp/qwenpaw-tauri.log 2>&1 || test $? -eq 124
+          test -x "$APPDIR/usr/lib/ld-linux-x86-64.so.2"
+          test -x "$APPDIR/usr/bin/qwenpaw-desktop"
+          readelf --version-info "$APPDIR/usr/bin/qwenpaw-desktop" | grep -Eo 'GLIBC_[0-9.]+' | sort -Vu | tail -5 || true
+
+          # Validate the embedded SquashFS without extracting a second multi-GB
+          # copy of the AppDir. Full extraction exhausted the hosted runner.
+          APPIMAGE_OFFSET="$(env -u APPIMAGE_EXTRACT_AND_RUN "$APPIMAGE" --appimage-offset)"
+          test "$APPIMAGE_OFFSET" -gt 0
+          unsquashfs -o "$APPIMAGE_OFFSET" -s "$APPIMAGE"
+          unsquashfs -o "$APPIMAGE_OFFSET" -ll "$APPIMAGE" >/tmp/qwenpaw-appimage-files.txt
+          grep -q 'usr/bin/qwenpaw-desktop' /tmp/qwenpaw-appimage-files.txt
+          grep -q 'usr/lib/ld-linux-x86-64.so.2' /tmp/qwenpaw-appimage-files.txt
+
+          set +e
+          timeout 45s xvfb-run -a "$APPDIR/AppRun" >/tmp/qwenpaw-tauri.log 2>&1
+          APP_STATUS=$?
+          set -e
+          if [ "$APP_STATUS" -ne 0 ] && [ "$APP_STATUS" -ne 124 ]; then
+            cat /tmp/qwenpaw-tauri.log
+            exit "$APP_STATUS"
+          fi
+
+      - name: Prune build intermediates before upload
+        run: |
+          set -euo pipefail
+          for path in \
+            console/node_modules \
+            console/dist \
+            console/dist-tauri \
+            console/src-tauri/binaries \
+            console/src-tauri/target \
+            dist/pyinstaller \
+            dist/pyinstaller-build \
+            dist/pyinstaller-venv; do
+            if [ -e "$path" ]; then
+              find "$path" -depth -delete
+            fi
+          done
+          df -h .
 
       - name: Upload AppImage
         uses: actions/upload-artifact@v4
         with:
           name: QwenPaw-Tauri-v2.2.1-Linux-x86_64-AppImage
           path: dist/QwenPaw-Tauri-*-Linux-x86_64.AppImage
+          if-no-files-found: error
+          compression-level: 0
