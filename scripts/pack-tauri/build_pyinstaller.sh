@@ -6,7 +6,7 @@
 #   ./scripts/pack-tauri/build_pyinstaller.sh
 #
 # Prerequisites:
-#   - Python 3.10+ on PATH (used only to bootstrap the bundled runtime)
+#   - Python 3.10+ on PATH (used only to bootstrap the staged Python 3.11 runtime)
 #   - PyInstaller 6.0+ (will be installed if not present)
 
 set -e
@@ -21,6 +21,7 @@ RUNTIME_PYTHON_DIR="${PYTHON_RUNTIME_DIR}/python"
 NATIVE_HOST_PYTHON="${RUNTIME_PYTHON_DIR}/bin/python3"
 BUILD_VENV="${DIST}/pyinstaller-venv"
 PYTHON_BIN="${BUILD_VENV}/bin/python"
+QWENPAW_PYTHON_VERSION="${QWENPAW_PYTHON_VERSION:-3.11}"
 VERSION=$(sed -n 's/^__version__[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' src/qwenpaw/__version__.py)
 
 echo "========================================="
@@ -46,10 +47,12 @@ mkdir -p "${BINARIES_DIR}"
 
 # The staged python-build-standalone runtime is the canonical source for both
 # the helper interpreter and the PyInstaller build environment. The PATH
-# Python only selects the X.Y version to download and runs the staging script.
+# Python only runs the staging script; the version is pinned explicitly because
+# the project requires Python >=3.11,<3.14 and Ubuntu 22.04 ships Python 3.10.
 echo "== Staging canonical Python runtime =="
 "$BOOTSTRAP_PYTHON" "${REPO_ROOT}/scripts/pack-tauri/stage_python_runtime.py" \
-    --dest "${PYTHON_RUNTIME_DIR}"
+    --dest "${PYTHON_RUNTIME_DIR}" \
+    --python-version "${QWENPAW_PYTHON_VERSION}"
 if [ ! -f "$NATIVE_HOST_PYTHON" ]; then
     echo "ERROR: Bundled Python interpreter not found at ${NATIVE_HOST_PYTHON}"
     exit 1
