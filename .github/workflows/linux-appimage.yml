@@ -16,6 +16,9 @@ jobs:
     runs-on: ubuntu-22.04
     container: ubuntu:22.04
     timeout-minutes: 180
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v4
