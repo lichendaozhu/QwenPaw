@@ -44,6 +44,16 @@ if ((${#missing[@]})); then
     exit 1
 fi
 
+# numba's Linux TBB threading backend is included by PyInstaller and requires
+# the oneTBB ABI shipped by Ubuntu 22.04's libtbb12 package. Check this before
+# the expensive frontend/PyInstaller/Rust builds so CI fails fast if the image
+# dependency list ever regresses.
+if ! find /lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu \
+    -maxdepth 1 -name 'libtbb.so.12' -print -quit 2>/dev/null | grep -q .; then
+    echo "ERROR: libtbb.so.12 is required; install Ubuntu package libtbb12" >&2
+    exit 1
+fi
+
 if [[ "$(uname -s)" != "Linux" ]]; then
     echo "ERROR: Linux AppImage builds must run on Linux" >&2
     exit 1
