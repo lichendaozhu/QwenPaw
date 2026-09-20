@@ -30,9 +30,7 @@ export default defineConfig(({ command, mode }) => {
   const apiBaseUrl = env.VITE_API_BASE_URL ?? "";
 
   return {
-    // Electron loads the bundle through file://, so public assets must be
-    // relative paths. Web/Tauri builds keep the normal root base.
-    base: mode === "electron" ? "./" : "/",
+    base: "/",
     define: {
       VITE_API_BASE_URL: JSON.stringify(apiBaseUrl),
       TOKEN: JSON.stringify(env.TOKEN || ""),
@@ -53,22 +51,6 @@ export default defineConfig(({ command, mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
-        ...(mode === "electron"
-          ? {
-              "@tauri-apps/api/core": path.resolve(
-                __dirname,
-                "src/desktop/runtime.ts",
-              ),
-              "@tauri-apps/api/event": path.resolve(
-                __dirname,
-                "src/desktop/runtime.ts",
-              ),
-              "@tauri-apps/plugin-dialog": path.resolve(
-                __dirname,
-                "src/desktop/runtime.ts",
-              ),
-            }
-          : {}),
       },
     },
     server: {

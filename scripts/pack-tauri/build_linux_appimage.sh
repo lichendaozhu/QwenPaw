@@ -147,6 +147,31 @@ APPIMAGE_EXTRACT_AND_RUN=1 \
   --exclude-library="libtcl*.so*" \
   --exclude-library="libtk*.so*"
 
+echo "== Bundling glibc loader and core libraries for glibc 2.31 hosts =="
+GLIBC_LIB_DIR="${APPDIR}/usr/lib"
+mkdir -p "${GLIBC_LIB_DIR}"
+for library in \
+    ld-linux-x86-64.so.2 \
+    libc.so.6 \
+    libdl.so.2 \
+    libm.so.6 \
+    libpthread.so.0 \
+    libresolv.so.2 \
+    librt.so.1 \
+    libutil.so.1 \
+    libnss_dns.so.2 \
+    libnss_files.so.2; do
+    source="/lib/x86_64-linux-gnu/${library}"
+    if [[ ! -e "${source}" ]]; then
+        source="/usr/lib/x86_64-linux-gnu/${library}"
+    fi
+    if [[ ! -e "${source}" ]]; then
+        echo "ERROR: required runtime library not found: ${library}" >&2
+        exit 1
+    fi
+    cp -L "${source}" "${GLIBC_LIB_DIR}/${library}"
+done
+
 if [[ ! -x "${APPIMAGETOOL}" ]]; then
     curl --fail --location --retry 3 \
         "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" \

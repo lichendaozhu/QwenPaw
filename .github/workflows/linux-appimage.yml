@@ -11,11 +11,11 @@ permissions:
 
 jobs:
   build-linux-appimage:
-    # Use an available hosted runner, but compile inside Ubuntu 20.04 so the
-    # AppImage stays compatible with the user's glibc 2.31 system.
+    # Build against Ubuntu 22.04's WebKitGTK 4.1/GLib 2.72. The AppImage
+    # builder bundles this runtime plus its loader/libc for glibc 2.31 hosts.
     runs-on: ubuntu-22.04
-    container: python:3.11-bullseye
-    timeout-minutes: 90
+    container: ubuntu:22.04
+    timeout-minutes: 180
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,13 +37,19 @@ jobs:
             libgtk-3-dev \
             libtbb2 \
             librsvg2-dev \
-            libwebkit2gtk-4.0-dev \
+            libwebkit2gtk-4.1-dev \
+            libsoup-3.0-dev \
             patchelf \
             pkg-config \
+            python3 \
+            python3-dev \
+            python3-pip \
+            python3-venv \
+            xvfb \
             zsync
 
       - name: Install packaging helper dependencies
-        run: python -m pip install packaging
+        run: python3 -m pip install packaging
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v5
@@ -64,6 +70,18 @@ jobs:
           NODE_OPTIONS: "--max-old-space-size=8192"
           APPIMAGE_EXTRACT_AND_RUN: "1"
         run: bash scripts/pack-tauri/build_linux_appimage.sh
+
+      - name: Validate AppImage and bundled glibc runtime
+        run: |
+          APPIMAGE="$(find dist -maxdepth 1 -type f -name 'QwenPaw-Tauri-*-Linux-x86_64.AppImage' -print -quit)"
+          test -n "$APPIMAGE"
+          file "$APPIMAGE" | grep -Eiq 'x86-64|x86_64'
+          chmod +x "$APPIMAGE"
+          "$APPIMAGE" --appimage-extract >/dev/null
+          test -x squashfs-root/usr/lib/ld-linux-x86-64.so.2
+          test -x squashfs-root/usr/bin/qwenpaw-desktop
+          readelf --version-info squashfs-root/usr/bin/qwenpaw-desktop | grep -Eo 'GLIBC_[0-9.]+' | sort -Vu | tail -5 || true
+          timeout 45s xvfb-run -a squashfs-root/AppRun >/tmp/qwenpaw-tauri.log 2>&1 || test $? -eq 124
 
       - name: Upload AppImage
         uses: actions/upload-artifact@v4
