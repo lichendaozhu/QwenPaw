@@ -95,9 +95,18 @@ if [[ -z "${DESKTOP_FILE}" ]]; then
 fi
 cp "${DESKTOP_FILE}" "${APPDIR}/$(basename "${DESKTOP_FILE}")"
 
-ICON_FILE="$(find "${APPDIR}/usr/share/icons" -type f \( -name '*.png' -o -name '*.svg' \) -print -quit)"
+# Tauri may omit the Linux icon directory when the base config only contains
+# platform-specific icons. Keep the AppImage self-contained by falling back to
+# the generated Linux PNG rather than failing after a successful native build.
+ICON_FILE=""
+if [[ -d "${APPDIR}/usr/share/icons" ]]; then
+    ICON_FILE="$(find "${APPDIR}/usr/share/icons" -type f \( -name '*.png' -o -name '*.svg' \) -print -quit)"
+fi
+if [[ -z "${ICON_FILE}" && -f "${REPO_ROOT}/console/src-tauri/icons/icon.png" ]]; then
+    ICON_FILE="${REPO_ROOT}/console/src-tauri/icons/icon.png"
+fi
 if [[ -z "${ICON_FILE}" ]]; then
-    echo "ERROR: Debian bundle did not contain an application icon" >&2
+    echo "ERROR: no application icon was found in the Debian bundle or source tree" >&2
     exit 1
 fi
 cp "${ICON_FILE}" "${APPDIR}/.DirIcon"
