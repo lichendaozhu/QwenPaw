@@ -3,11 +3,27 @@
 set -eu
 
 APPDIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-export LD_LIBRARY_PATH="$APPDIR/usr/lib:$APPDIR/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+
+case "$(uname -m)" in
+  x86_64|amd64)
+    GNU_TRIPLET="x86_64-linux-gnu"
+    GLIBC_LOADER="ld-linux-x86-64.so.2"
+    ;;
+  aarch64|arm64)
+    GNU_TRIPLET="aarch64-linux-gnu"
+    GLIBC_LOADER="ld-linux-aarch64.so.1"
+    ;;
+  *)
+    echo "QwenPaw does not support this architecture: $(uname -m)" >&2
+    exit 1
+    ;;
+esac
+
+export LD_LIBRARY_PATH="$APPDIR/usr/lib:$APPDIR/usr/lib/$GNU_TRIPLET:${LD_LIBRARY_PATH:-}"
 
 # Run with the loader and glibc shipped in the AppImage. This is what makes
 # the Ubuntu 22.04 Tauri/WebKit build usable on Kylin systems with glibc 2.31.
-LOADER="$APPDIR/usr/lib/ld-linux-x86-64.so.2"
+LOADER="$APPDIR/usr/lib/$GLIBC_LOADER"
 if [ -x "$LOADER" ]; then
   exec "$LOADER" --library-path "$LD_LIBRARY_PATH" "$APPDIR/usr/bin/qwenpaw-desktop" "$@"
 fi
