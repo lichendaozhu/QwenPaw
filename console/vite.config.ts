@@ -30,6 +30,7 @@ export default defineConfig(({ command, mode }) => {
   const apiBaseUrl = env.VITE_API_BASE_URL ?? "";
 
   return {
+    base: "/",
     define: {
       VITE_API_BASE_URL: JSON.stringify(apiBaseUrl),
       TOKEN: JSON.stringify(env.TOKEN || ""),
