@@ -228,12 +228,14 @@ def main() -> None:
         archive = tmp.name
     try:
         with tarfile.open(archive, "r:gz") as tar:
-            # ``filter="data"`` is only available on newer CPython patch
-            # releases (3.12+, backported to 3.10.12/3.11.4). Fall back to a
-            # plain extract on older interpreters; the archive comes from the
-            # trusted python-build-standalone release.
+            # The archive is a trusted, fixed-source python-build-standalone
+            # release.  ``filter="data"`` rejects some of its intentional
+            # relative terminfo links on Ubuntu 22.04's Python 3.10 and
+            # aborts staging with LinkOutsideDestinationError.  Use the
+            # explicit trusted filter when available, while retaining the
+            # fallback for older Python patch releases.
             try:
-                tar.extractall(dest, filter="data")
+                tar.extractall(dest, filter="fully_trusted")
             except TypeError:
                 tar.extractall(dest)
     finally:
