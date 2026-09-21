@@ -24,10 +24,33 @@ DEB_DIR="${BUNDLE_DIR}/deb"
 APPIMAGE_DIR="${BUNDLE_DIR}/appimage"
 APPDIR="${APPIMAGE_DIR}/QwenPaw.AppDir"
 
+if [[ "$(uname -s)" != "Linux" ]]; then
+    echo "ERROR: Linux AppImage builds must run on Linux" >&2
+    exit 1
+fi
+
+case "$(uname -m)" in
+    x86_64|amd64)
+        APPIMAGE_ARCH="x86_64"
+        GNU_TRIPLET="x86_64-linux-gnu"
+        GLIBC_LOADER="ld-linux-x86-64.so.2"
+        ;;
+    aarch64|arm64)
+        APPIMAGE_ARCH="aarch64"
+        GNU_TRIPLET="aarch64-linux-gnu"
+        GLIBC_LOADER="ld-linux-aarch64.so.1"
+        ;;
+    *)
+        echo "ERROR: unsupported Linux architecture: $(uname -m)" >&2
+        exit 1
+        ;;
+esac
+
 echo "========================================="
 echo "QwenPaw Tauri Build - Linux AppImage"
 echo "========================================="
 echo "Version: ${VERSION}"
+echo "Architecture: ${APPIMAGE_ARCH} (${GNU_TRIPLET})"
 echo ""
 
 missing=()
@@ -48,14 +71,9 @@ fi
 # the oneTBB ABI shipped by Ubuntu 22.04's libtbb12 package. Check this before
 # the expensive frontend/PyInstaller/Rust builds so CI fails fast if the image
 # dependency list ever regresses.
-if ! find /lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu \
+if ! find "/lib/${GNU_TRIPLET}" "/usr/lib/${GNU_TRIPLET}" \
     -maxdepth 1 -name 'libtbb.so.12' -print -quit 2>/dev/null | grep -q .; then
     echo "ERROR: libtbb.so.12 is required; install Ubuntu package libtbb12" >&2
-    exit 1
-fi
-
-if [[ "$(uname -s)" != "Linux" ]]; then
-    echo "ERROR: Linux AppImage builds must run on Linux" >&2
     exit 1
 fi
 
@@ -144,13 +162,13 @@ if ! command -v curl >/dev/null 2>&1; then
 fi
 
 TOOL_DIR="${REPO_ROOT}/.cache/packaging"
-LINUXDEPLOY="${TOOL_DIR}/linuxdeploy-x86_64.AppImage"
-APPIMAGETOOL="${TOOL_DIR}/appimagetool-x86_64.AppImage"
+LINUXDEPLOY="${TOOL_DIR}/linuxdeploy-${APPIMAGE_ARCH}.AppImage"
+APPIMAGETOOL="${TOOL_DIR}/appimagetool-${APPIMAGE_ARCH}.AppImage"
 mkdir -p "${TOOL_DIR}"
 
 if [[ ! -x "${LINUXDEPLOY}" ]]; then
     curl --fail --location --retry 3 \
-        "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage" \
+        "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${APPIMAGE_ARCH}.AppImage" \
         --output "${LINUXDEPLOY}"
     chmod +x "${LINUXDEPLOY}"
 fi
@@ -166,11 +184,11 @@ APPIMAGE_EXTRACT_AND_RUN=1 \
   --exclude-library="libtcl*.so*" \
   --exclude-library="libtk*.so*"
 
-echo "== Bundling glibc loader and core libraries for glibc 2.31 hosts =="
+echo "== Bundling glibc and compiler runtimes for glibc 2.31 hosts =="
 GLIBC_LIB_DIR="${APPDIR}/usr/lib"
 mkdir -p "${GLIBC_LIB_DIR}"
 for library in \
-    ld-linux-x86-64.so.2 \
+    "${GLIBC_LOADER}" \
     libc.so.6 \
     libdl.so.2 \
     libm.so.6 \
@@ -179,10 +197,12 @@ for library in \
     librt.so.1 \
     libutil.so.1 \
     libnss_dns.so.2 \
-    libnss_files.so.2; do
-    source="/lib/x86_64-linux-gnu/${library}"
+    libnss_files.so.2 \
+    libstdc++.so.6 \
+    libgcc_s.so.1; do
+    source="/lib/${GNU_TRIPLET}/${library}"
     if [[ ! -e "${source}" ]]; then
-        source="/usr/lib/x86_64-linux-gnu/${library}"
+        source="/usr/lib/${GNU_TRIPLET}/${library}"
     fi
     if [[ ! -e "${source}" ]]; then
         echo "ERROR: required runtime library not found: ${library}" >&2
@@ -193,7 +213,7 @@ done
 
 if [[ ! -x "${APPIMAGETOOL}" ]]; then
     curl --fail --location --retry 3 \
-        "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" \
+        "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${APPIMAGE_ARCH}.AppImage" \
         --output "${APPIMAGETOOL}"
     chmod +x "${APPIMAGETOOL}"
 fi
@@ -204,9 +224,9 @@ else
     DIST_ROOT="${REPO_ROOT}/${DIST}"
 fi
 mkdir -p "${DIST_ROOT}"
-OUTPUT="${DIST_ROOT}/QwenPaw-Tauri-${VERSION}-Linux-x86_64.AppImage"
+OUTPUT="${DIST_ROOT}/QwenPaw-Tauri-${VERSION}-Linux-${APPIMAGE_ARCH}.AppImage"
 echo "== Building AppImage with appimagetool =="
-APPIMAGE_EXTRACT_AND_RUN=1 ARCH=x86_64 \
+APPIMAGE_EXTRACT_AND_RUN=1 ARCH="${APPIMAGE_ARCH}" \
   "${APPIMAGETOOL}" --appimage-extract-and-run "${APPDIR}" "${OUTPUT}"
 chmod +x "${OUTPUT}"
 

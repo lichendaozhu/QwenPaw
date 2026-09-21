@@ -1,4 +1,4 @@
-name: Linux AppImage
+name: Linux AppImage ARM64
 
 on:
   push:
@@ -10,10 +10,10 @@ permissions:
   contents: read
 
 jobs:
-  build-linux-appimage:
-    # Build against Ubuntu 22.04's WebKitGTK 4.1/GLib 2.72. The AppImage
-    # builder bundles this runtime plus its loader/libc for glibc 2.31 hosts.
-    runs-on: ubuntu-22.04
+  build-linux-appimage-arm64:
+    # Native ARM64 build against Ubuntu 22.04. The packaged loader/libc keeps
+    # the result usable on Kylin V10 ARM64 systems with glibc 2.31.
+    runs-on: ubuntu-22.04-arm
     container: ubuntu:22.04
     timeout-minutes: 180
     defaults:
@@ -22,6 +22,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Verify native ARM64 runner
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "aarch64"
 
       - name: Install Linux desktop build dependencies
         run: |
@@ -70,7 +75,7 @@ jobs:
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Build Linux AppImage
+      - name: Build Linux ARM64 AppImage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_OPTIONS: "--max-old-space-size=8192"
@@ -80,35 +85,34 @@ jobs:
       - name: Validate AppImage and bundled glibc runtime
         run: |
           set -euo pipefail
-          APPIMAGE="$(find dist -maxdepth 1 -type f -name 'QwenPaw-Tauri-*-Linux-x86_64.AppImage' -print -quit)"
+          APPIMAGE="$(find dist -maxdepth 1 -type f -name 'QwenPaw-Tauri-*-Linux-aarch64.AppImage' -print -quit)"
           APPDIR="console/src-tauri/target/release/bundle/appimage/QwenPaw.AppDir"
           test -n "$APPIMAGE"
           test -d "$APPDIR"
-          file "$APPIMAGE" | grep -Eiq 'x86-64|x86_64'
+          file "$APPIMAGE" | grep -Eiq 'ARM aarch64|aarch64'
           chmod +x "$APPIMAGE"
-          test -x "$APPDIR/usr/lib/ld-linux-x86-64.so.2"
+          test -x "$APPDIR/usr/lib/ld-linux-aarch64.so.1"
           test -e "$APPDIR/usr/lib/libstdc++.so.6"
           test -e "$APPDIR/usr/lib/libgcc_s.so.1"
           grep -aFq 'GLIBCXX_3.4.30' "$APPDIR/usr/lib/libstdc++.so.6"
           test -x "$APPDIR/usr/bin/qwenpaw-desktop"
+          file "$APPDIR/usr/bin/qwenpaw-desktop" | grep -Eiq 'ARM aarch64|aarch64'
           readelf --version-info "$APPDIR/usr/bin/qwenpaw-desktop" | grep -Eo 'GLIBC_[0-9.]+' | sort -Vu | tail -5 || true
 
           RUNTIME_LIBS="$(
-            "$APPDIR/usr/lib/ld-linux-x86-64.so.2" \
-              --library-path "$APPDIR/usr/lib:$APPDIR/usr/lib/x86_64-linux-gnu" \
+            "$APPDIR/usr/lib/ld-linux-aarch64.so.1" \
+              --library-path "$APPDIR/usr/lib:$APPDIR/usr/lib/aarch64-linux-gnu" \
               --list "$APPDIR/usr/bin/qwenpaw-desktop"
           )"
           grep -Fq "$APPDIR/usr/lib/libstdc++.so.6" <<<"$RUNTIME_LIBS"
           grep -Fq "$APPDIR/usr/lib/libgcc_s.so.1" <<<"$RUNTIME_LIBS"
 
-          # Validate the embedded SquashFS without extracting a second multi-GB
-          # copy of the AppDir. Full extraction exhausted the hosted runner.
           APPIMAGE_OFFSET="$(env -u APPIMAGE_EXTRACT_AND_RUN "$APPIMAGE" --appimage-offset)"
           test "$APPIMAGE_OFFSET" -gt 0
           unsquashfs -o "$APPIMAGE_OFFSET" -s "$APPIMAGE"
           unsquashfs -o "$APPIMAGE_OFFSET" -ll "$APPIMAGE" >/tmp/qwenpaw-appimage-files.txt
           grep -q 'usr/bin/qwenpaw-desktop' /tmp/qwenpaw-appimage-files.txt
-          grep -q 'usr/lib/ld-linux-x86-64.so.2' /tmp/qwenpaw-appimage-files.txt
+          grep -q 'usr/lib/ld-linux-aarch64.so.1' /tmp/qwenpaw-appimage-files.txt
           grep -q 'usr/lib/libstdc++.so.6' /tmp/qwenpaw-appimage-files.txt
           grep -q 'usr/lib/libgcc_s.so.1' /tmp/qwenpaw-appimage-files.txt
 
@@ -142,7 +146,7 @@ jobs:
       - name: Upload AppImage
         uses: actions/upload-artifact@v4
         with:
-          name: QwenPaw-Tauri-v2.2.1-Linux-x86_64-AppImage
-          path: dist/QwenPaw-Tauri-*-Linux-x86_64.AppImage
+          name: QwenPaw-Tauri-v2.2.1-Linux-aarch64-AppImage
+          path: dist/QwenPaw-Tauri-*-Linux-aarch64.AppImage
           if-no-files-found: error
           compression-level: 0
