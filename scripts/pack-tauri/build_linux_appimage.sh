@@ -116,6 +116,17 @@ dpkg-deb -x "${DEB}" "${APPDIR}"
 cp "${REPO_ROOT}/scripts/pack-tauri/appimage/AppRun" "${APPDIR}/AppRun"
 chmod +x "${APPDIR}/AppRun"
 
+# ARM64 glibc does not preserve the auxiliary vector correctly when an
+# application is launched as `ld-linux-aarch64.so.1 app`. Bundle patchelf so
+# AppRun can set the absolute AppImage loader as the ELF interpreter on a
+# temporary executable copy and let the kernel perform the normal startup.
+if ! command -v patchelf >/dev/null 2>&1; then
+    echo "ERROR: patchelf is required to make the ARM64 AppImage self-contained" >&2
+    exit 1
+fi
+cp "$(command -v patchelf)" "${APPDIR}/usr/bin/patchelf"
+chmod +x "${APPDIR}/usr/bin/patchelf"
+
 DESKTOP_FILE="$(find "${APPDIR}/usr/share/applications" -maxdepth 1 -type f -name '*.desktop' -print -quit)"
 if [[ -z "${DESKTOP_FILE}" ]]; then
     echo "ERROR: Debian bundle did not contain a desktop entry" >&2

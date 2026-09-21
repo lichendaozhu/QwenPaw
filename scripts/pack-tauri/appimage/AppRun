@@ -25,6 +25,17 @@ export LD_LIBRARY_PATH="$APPDIR/usr/lib:$APPDIR/usr/lib/$GNU_TRIPLET:${LD_LIBRAR
 # the Ubuntu 22.04 Tauri/WebKit build usable on Kylin systems with glibc 2.31.
 LOADER="$APPDIR/usr/lib/$GLIBC_LOADER"
 if [ -x "$LOADER" ]; then
+  if [ "$GNU_TRIPLET" = "aarch64-linux-gnu" ] && [ -x "$APPDIR/usr/bin/patchelf" ]; then
+    # Calling ld-linux-aarch64.so.1 directly loses the ARM auxiliary vector
+    # used by GLib's getauxval(). Use the bundled loader as the ELF interpreter
+    # instead, which preserves the normal kernel process startup path.
+    PATCHED_BIN="${TMPDIR:-/tmp}/qwenpaw-desktop-$$"
+    cp "$APPDIR/usr/bin/qwenpaw-desktop" "$PATCHED_BIN"
+    "$LOADER" --library-path "$LD_LIBRARY_PATH" "$APPDIR/usr/bin/patchelf" \
+      --set-interpreter "$LOADER" "$PATCHED_BIN"
+    chmod +x "$PATCHED_BIN"
+    exec "$PATCHED_BIN" "$@"
+  fi
   exec "$LOADER" --library-path "$LD_LIBRARY_PATH" "$APPDIR/usr/bin/qwenpaw-desktop" "$@"
 fi
 exec "$APPDIR/usr/bin/qwenpaw-desktop" "$@"
