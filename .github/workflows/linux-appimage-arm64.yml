@@ -94,6 +94,9 @@ jobs:
           test -x "$APPDIR/usr/lib/ld-linux-aarch64.so.1"
           test -e "$APPDIR/usr/lib/libstdc++.so.6"
           test -e "$APPDIR/usr/lib/libgcc_s.so.1"
+          test -e "$APPDIR/usr/lib/libwayland-client.so.0"
+          test -e "$APPDIR/usr/lib/libwayland-cursor.so.0"
+          test -e "$APPDIR/usr/lib/libxkbcommon.so.0"
           grep -aFq 'GLIBCXX_3.4.30' "$APPDIR/usr/lib/libstdc++.so.6"
           test -x "$APPDIR/usr/bin/qwenpaw-desktop"
           file "$APPDIR/usr/bin/qwenpaw-desktop" | grep -Eiq 'ARM aarch64|aarch64'
@@ -115,6 +118,8 @@ jobs:
           grep -q 'usr/lib/ld-linux-aarch64.so.1' /tmp/qwenpaw-appimage-files.txt
           grep -q 'usr/lib/libstdc++.so.6' /tmp/qwenpaw-appimage-files.txt
           grep -q 'usr/lib/libgcc_s.so.1' /tmp/qwenpaw-appimage-files.txt
+          grep -q 'usr/lib/libwayland-client.so.0' /tmp/qwenpaw-appimage-files.txt
+          grep -q 'usr/lib/libwayland-cursor.so.0' /tmp/qwenpaw-appimage-files.txt
 
           set +e
           timeout 45s xvfb-run -a "$APPDIR/AppRun" >/tmp/qwenpaw-tauri.log 2>&1

@@ -222,6 +222,28 @@ for library in \
     cp -L "${source}" "${GLIBC_LIB_DIR}/${library}"
 done
 
+# Kylin V10 ships an older Wayland client. GTK3 from Ubuntu 22.04 is linked
+# against wl_proxy_marshal_flags(), which is absent from that system copy. A
+# loader-path-only fix is not enough: libgdk-3.so.0 must see the matching
+# Wayland ABI inside the AppImage before it can start on Kylin.
+echo "== Bundling GTK Wayland/X11 runtime libraries =="
+for library in \
+    libwayland-client.so.0 \
+    libwayland-cursor.so.0 \
+    libwayland-egl.so.1 \
+    libxkbcommon.so.0 \
+    libxkbcommon-x11.so.0; do
+    source="/lib/${GNU_TRIPLET}/${library}"
+    if [[ ! -e "${source}" ]]; then
+        source="/usr/lib/${GNU_TRIPLET}/${library}"
+    fi
+    if [[ ! -e "${source}" ]]; then
+        echo "ERROR: required GTK runtime library not found: ${library}" >&2
+        exit 1
+    fi
+    cp -L "${source}" "${GLIBC_LIB_DIR}/${library}"
+done
+
 if [[ ! -x "${APPIMAGETOOL}" ]]; then
     curl --fail --location --retry 3 \
         "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${APPIMAGE_ARCH}.AppImage" \

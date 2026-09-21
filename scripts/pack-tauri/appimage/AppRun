@@ -20,6 +20,10 @@ case "$(uname -m)" in
 esac
 
 export LD_LIBRARY_PATH="$APPDIR/usr/lib:$APPDIR/usr/lib/$GNU_TRIPLET:${LD_LIBRARY_PATH:-}"
+# Kylin V10's system Wayland stack is older than the GTK/WebKit build used by
+# QwenPaw. Prefer the X11 backend on desktop sessions; the matching Wayland
+# libraries are bundled as well for GTK's dependency resolution.
+export GDK_BACKEND="${GDK_BACKEND:-x11}"
 
 # Run with the loader and glibc shipped in the AppImage. This is what makes
 # the Ubuntu 22.04 Tauri/WebKit build usable on Kylin systems with glibc 2.31.
