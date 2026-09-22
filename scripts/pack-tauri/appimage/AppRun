@@ -20,6 +20,10 @@ case "$(uname -m)" in
 esac
 
 export LD_LIBRARY_PATH="$APPDIR/usr/lib:$APPDIR/usr/lib/$GNU_TRIPLET:${LD_LIBRARY_PATH:-}"
+# WebKitGTK launches WebKitNetworkProcess and WebKitWebProcess from the
+# compile-time system directory. Point it at the copies bundled in the
+# AppImage; otherwise it tries to execute /usr/lib/... on the host and exits.
+export WEBKIT_EXEC_PATH="${WEBKIT_EXEC_PATH:-$APPDIR/usr/lib/$GNU_TRIPLET/webkit2gtk-4.1}"
 # Kylin V10's system Wayland stack is older than the GTK/WebKit build used by
 # QwenPaw. Prefer the X11 backend on desktop sessions; the matching Wayland
 # libraries are bundled as well for GTK's dependency resolution.

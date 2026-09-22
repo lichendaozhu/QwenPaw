@@ -271,6 +271,18 @@ for library in \
     cp -L "${source}" "${GLIBC_LIB_DIR}/${library}"
 done
 
+echo "== Bundling WebKitGTK helper processes =="
+WEBKIT_HELPER_SOURCE="/usr/lib/${GNU_TRIPLET}/webkit2gtk-4.1"
+WEBKIT_HELPER_DEST="${APPDIR}/usr/lib/${GNU_TRIPLET}/webkit2gtk-4.1"
+mkdir -p "${WEBKIT_HELPER_DEST}"
+for helper in WebKitNetworkProcess WebKitWebProcess; do
+    if [[ ! -x "${WEBKIT_HELPER_SOURCE}/${helper}" ]]; then
+        echo "ERROR: required WebKitGTK helper not found: ${WEBKIT_HELPER_SOURCE}/${helper}" >&2
+        exit 1
+    fi
+    cp -L "${WEBKIT_HELPER_SOURCE}/${helper}" "${WEBKIT_HELPER_DEST}/${helper}"
+done
+
 if [[ ! -x "${APPIMAGETOOL}" ]]; then
     curl --fail --location --retry 3 \
         "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${APPIMAGE_ARCH}.AppImage" \

@@ -123,6 +123,8 @@ jobs:
           test -e "$APPDIR/usr/lib/libwayland-cursor.so.0"
           test -e "$APPDIR/usr/lib/libfreetype.so.6"
           test -e "$APPDIR/usr/lib/libxkbcommon.so.0"
+          test -x "$APPDIR/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess"
+          test -x "$APPDIR/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess"
           grep -aFq 'GLIBCXX_3.4.30' "$APPDIR/usr/lib/libstdc++.so.6"
           test -x "$APPDIR/usr/bin/qwenpaw-desktop"
           readelf --version-info "$APPDIR/usr/bin/qwenpaw-desktop" | grep -Eo 'GLIBC_[0-9.]+' | sort -Vu | tail -5 || true
@@ -148,6 +150,8 @@ jobs:
           grep -q 'usr/lib/libwayland-client.so.0' /tmp/qwenpaw-appimage-files.txt
           grep -q 'usr/lib/libwayland-cursor.so.0' /tmp/qwenpaw-appimage-files.txt
           grep -q 'usr/lib/libfreetype.so.6' /tmp/qwenpaw-appimage-files.txt
+          grep -q 'usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess' /tmp/qwenpaw-appimage-files.txt
+          grep -q 'usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess' /tmp/qwenpaw-appimage-files.txt
 
           set +e
           timeout 45s xvfb-run -a "$APPDIR/AppRun" >/tmp/qwenpaw-tauri.log 2>&1
