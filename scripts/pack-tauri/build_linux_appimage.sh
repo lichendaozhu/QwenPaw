@@ -231,6 +231,12 @@ for library in \
     libwayland-client.so.0 \
     libwayland-cursor.so.0 \
     libwayland-egl.so.1 \
+    libgbm.so.1 \
+    libdrm.so.2 \
+    libEGL.so.1 \
+    libGL.so.1 \
+    libGLX.so.0 \
+    libOpenGL.so.0 \
     libfreetype.so.6 \
     libfontconfig.so.1 \
     libharfbuzz.so.0 \
