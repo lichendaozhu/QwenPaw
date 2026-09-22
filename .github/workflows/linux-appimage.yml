@@ -44,6 +44,24 @@ jobs:
             libwayland-cursor0 \
             libwayland-egl1 \
             libfreetype6 \
+            libfontconfig1 \
+            libharfbuzz0b \
+            libgraphite2-3 \
+            libpng16-16 \
+            libjpeg8 \
+            libwebp7 \
+            libwebpdemux2 \
+            libwebpmux3 \
+            libbrotli1 \
+            libexpat1 \
+            libzstd1 \
+            libbz2-1.0 \
+            libffi8 \
+            libpcre2-8-0 \
+            libsqlite3-0 \
+            libicu70 \
+            libxml2 \
+            libxslt1.1 \
             libxkbcommon0 \
             libxkbcommon-x11-0 \
             libwebkit2gtk-4.1-dev \

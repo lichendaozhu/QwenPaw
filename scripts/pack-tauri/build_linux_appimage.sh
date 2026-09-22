@@ -232,6 +232,26 @@ for library in \
     libwayland-cursor.so.0 \
     libwayland-egl.so.1 \
     libfreetype.so.6 \
+    libfontconfig.so.1 \
+    libharfbuzz.so.0 \
+    libgraphite2.so.3 \
+    libpng16.so.16 \
+    libjpeg.so.8 \
+    libwebp.so.7 \
+    libwebpdemux.so.2 \
+    libwebpmux.so.3 \
+    libbrotlidec.so.1 \
+    libbrotlienc.so.1 \
+    libbrotlicommon.so.1 \
+    libexpat.so.1 \
+    libzstd.so.1 \
+    libbz2.so.1.0 \
+    libffi.so.8 \
+    libpcre2-8.so.0 \
+    libsqlite3.so.0 \
+    libicuuc.so.70 \
+    libicui18n.so.70 \
+    libicudata.so.70 \
     libxkbcommon.so.0 \
     libxkbcommon-x11.so.0; do
     source="/lib/${GNU_TRIPLET}/${library}"
