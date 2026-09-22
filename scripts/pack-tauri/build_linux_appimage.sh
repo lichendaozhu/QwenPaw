@@ -231,6 +231,7 @@ for library in \
     libwayland-client.so.0 \
     libwayland-cursor.so.0 \
     libwayland-egl.so.1 \
+    libfreetype.so.6 \
     libxkbcommon.so.0 \
     libxkbcommon-x11.so.0; do
     source="/lib/${GNU_TRIPLET}/${library}"
